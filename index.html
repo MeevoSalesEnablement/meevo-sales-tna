@@ -57,7 +57,7 @@ main{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
 .scale-row .n{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
 .scale-row b{display:block;font-weight:600}
 .scale-row span{color:var(--ink3);font-size:14px}
-.panels{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
 .panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);text-align:left;position:relative;overflow:hidden;transition:.18s;display:flex;flex-direction:column;gap:8px}
 .panel:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(35,36,38,.12)}
 .panel::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--accent)}
@@ -186,7 +186,7 @@ table.detail td.sc{font-weight:700;text-align:center;width:50px;border-radius:6p
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:#fff;padding:12px 18px;border-radius:10px;font-weight:600;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 
 @media (max-width:860px){
-  .hero,.panels,.how,.identity,.two,.grid2{grid-template-columns:1fr}
+  .hero,.how,.identity,.two,.grid2{grid-template-columns:1fr}
   .tiles{grid-template-columns:1fr 1fr}
   .meter-wrap{grid-template-columns:1fr;gap:10px}
   .rating button .t{display:none}
@@ -217,7 +217,7 @@ const CONFIG = {
   DEMO_ADMIN_PASSWORD: "meevo",
   ORG_NAME: "Meevo",
   // Managers by role (shown in the rep form) plus Sales Enablement, who are offered to every role.
-  MANAGERS_BY_ROLE: { SDR: ["Avery Baccala"], AE: ["Melanie Hull", "Taylor Meeker"], SE: [] },
+  MANAGERS_BY_ROLE: { SDR: ["Avery Baccala"], AE: ["Melanie Hull", "Taylor Meeker"], SE: [], CSM: [] },
   ENABLEMENT: ["Terry Moorehead", "Nicole Fabre"],
   get MANAGERS(){ return [...new Set([...Object.values(this.MANAGERS_BY_ROLE).flat(), ...this.ENABLEMENT])]; }
 };
@@ -347,8 +347,55 @@ const ROLES = {
         { id:"se-19", text:"Keep my demo environment and product knowledge current with releases." }
       ]}
     ]
+  },
+
+  CSM: {
+    key:"CSM", name:"Customer Success Manager", abbr:"CSM", accent:"#5F6B4A",
+    tagline:"Onboarding, adoption, business reviews, retention, and expansion.",
+    stages:[
+      { name:"Onboarding & Handoff", why:"The first 90 days decide whether a client becomes a long term customer.", questions:[
+        { id:"csm-1", text:"Run a structured kickoff after the sales handoff that captures the client's goals, pain points, and what success looks like to them." },
+        { id:"csm-2", text:"Drive the early adoption milestones (online booking live, payments live, staff trained) on a clear timeline." }
+      ]},
+      { name:"Adoption & Value", why:"Clients stay when they feel the value, not when they own the features.", questions:[
+        { id:"csm-3", text:"Identify under used features (memberships, online booking, marketing automation, reporting) and connect them to the client's own goals." },
+        { id:"csm-4", text:"Train owners, managers, and front desk staff in a way that sticks, not just a one time walkthrough." },
+        { id:"csm-5", text:"Use Meevo reporting to show the client the value they are getting in revenue, retention, or time saved." }
+      ]},
+      { name:"Relationships & Business Reviews", why:"Owner level conversations about their business, not feature updates.", questions:[
+        { id:"csm-6", text:"Run check ins and business reviews that focus on the client's business goals rather than a product update." },
+        { id:"csm-7", text:"Build relationships beyond the primary contact so the account is not dependent on one person." }
+      ]},
+      { name:"Health & Risk", why:"Churn is usually visible months before the renewal date.", questions:[
+        { id:"csm-8", text:"Spot early churn signals (low logins, support ticket spikes, payment issues, ownership change) and act before renewal." },
+        { id:"csm-9", text:"Have a direct conversation with an unhappy client and turn it around." },
+        { id:"csm-10", text:"Manage escalations and set expectations with support and product without over promising." }
+      ]},
+      { name:"Renewal & Expansion", why:"Retention protects revenue, expansion grows it.", questions:[
+        { id:"csm-11", text:"Lead renewal conversations with confidence and hold price by returning to value." },
+        { id:"csm-12", text:"Spot and position expansion (payments, add on modules, additional locations) as a natural next step rather than a pitch." },
+        { id:"csm-13", text:"Handle 'we are looking at a competitor' from an existing client." }
+      ]},
+      { name:"Product & Process", why:"Confident advice depends on current knowledge and clean records.", questions:[
+        { id:"csm-14", text:"Keep my product knowledge and release awareness current so I can advise clients confidently." },
+        { id:"csm-15", text:"Keep account health notes, next steps, and renewal dates accurate and current." }
+      ]}
+    ]
   }
 };
+
+/* =========================================================
+   HOW DO YOU LIKE TO LEARN?  (asked of every role)
+   ========================================================= */
+const LEARNING = [
+  { id:"learn-live",     label:"Live workshops and roleplay",            hint:"Group sessions, practising live, getting feedback in the room." },
+  { id:"learn-coach",    label:"One to one coaching with my manager",     hint:"Call reviews, deal coaching, personal feedback." },
+  { id:"learn-shadow",   label:"Shadowing and listening to real calls",   hint:"Sitting in on top performers, Attention call libraries, snippets." },
+  { id:"learn-self",     label:"Self paced videos, guides and playbooks", hint:"Learning on my own time and coming back to it when I need it." }
+];
+const LEARN_SCALE = [
+  { v:1, short:"Not for me" }, { v:2, short:"Rarely" }, { v:3, short:"Sometimes" }, { v:4, short:"Works well" }, { v:5, short:"Best for me" }
+];
 </script>
 
 <script>
@@ -400,9 +447,10 @@ function seedDemo(){
   const people = [
     ["Jordan Blake","SDR","Sam Rivera",2.6],["Priya Nair","SDR","Sam Rivera",3.4],["Marcus Lee","SDR","Sam Rivera",3.9],
     ["Alexis Chen","AE","Taylor Morgan",3.1],["Devon Carter","AE","Taylor Morgan",3.8],["Riley Brooks","AE","Taylor Morgan",2.8],
-    ["Casey Nguyen","SE","Taylor Morgan",3.6],["Morgan Ellis","SE","Taylor Morgan",4.1]
+    ["Casey Nguyen","SE","Taylor Morgan",3.6],["Morgan Ellis","SE","Taylor Morgan",4.1],
+    ["Jamie Ortiz","CSM","Robin Park",3.3],["Sydney Patel","CSM","Robin Park",2.9]
   ];
-  const weak = { SDR:["sdr-6","sdr-14","sdr-15","sdr-16","sdr-7"], AE:["ae-5","ae-14","ae-18","ae-19","ae-21","ae-22"], SE:["se-1","se-9","se-15","se-8"] };
+  const weak = { SDR:["sdr-6","sdr-14","sdr-15","sdr-16","sdr-7"], AE:["ae-5","ae-14","ae-18","ae-19","ae-21","ae-22"], SE:["se-1","se-9","se-15","se-8"], CSM:["csm-8","csm-11","csm-13","csm-5"] };
   const reasons = ["Still get thrown when they push back.","Comfortable in prep but it slips on live calls.","Do this well with warm leads, less so with cold.","Have had wins here recently.","Need more reps on this, especially with med spas.","Could run a session on this for the team.","Tend to react instead of lead here."];
   let seed = 7; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   const out = [];
@@ -413,7 +461,8 @@ function seedDemo(){
       s = Math.max(1, Math.min(5, Math.round(s)));
       qs.push({ id:q.id, stage:st.name, text:q.text, score:s, reason: rnd() > .45 ? reasons[Math.floor(rnd()*reasons.length)] : "" });
     }));
-    const sub = buildSubmission({ name, email: name.toLowerCase().replace(" ",".") + "@meevo.com", manager: mgr, role, questions: qs, priorities: weak[role].slice(0,3), comments:"" });
+    const learning = LEARNING.map((l, li) => ({ id:l.id, label:l.label, score: Math.max(1, Math.min(5, Math.round(2 + rnd()*3 + (li===(i%4)?1:0)))), reason: rnd() > .5 ? "This is how most of what I know actually stuck." : "" }));
+    const sub = buildSubmission({ name, email: name.toLowerCase().replace(" ",".") + "@meevo.com", manager: mgr, role, questions: qs, priorities: weak[role].slice(0,3), comments:"", learning });
     sub.id = cryptoId(); sub.timestamp = new Date(Date.now() - (i*2+1) * 86400000).toISOString();
     out.push(sub);
   });
@@ -438,10 +487,10 @@ const HEAT = ["#E4ECEF","#B8CDD5","#7FA6B4","#45788B","#204855"];
 function heatColor(v){ if (v == null) return "transparent"; const i = Math.max(0, Math.min(4, Math.round(v) - 1)); return HEAT[i]; }
 function heatInk(v){ return (v != null && v >= 3.5) ? "#fff" : "#232426"; }
 
-function buildSubmission({ name, email, manager, role, questions, priorities, comments }){
+function buildSubmission({ name, email, manager, role, questions, priorities, comments, learning }){
   const stageAverages = {};
   ROLES[role].stages.forEach(st => { stageAverages[st.name] = avg(questions.filter(q => q.stage === st.name).map(q => q.score)); });
-  return { name, email, manager, role, questions, priorities, comments, overall: avg(questions.map(q => q.score)), stageAverages };
+  return { name, email, manager, role, questions, priorities, comments, learning: learning || [], overall: avg(questions.map(q => q.score)), stageAverages };
 }
 
 /* =========================================================
@@ -454,7 +503,7 @@ function route(){
   window.scrollTo(0,0);
   if (h === "#/admin") return renderAdmin();
   if (h === "#/mine") return renderMine();
-  const m = h.match(/^#\/assess\/(SDR|AE|SE)$/);
+  const m = h.match(/^#\/assess\/(SDR|AE|SE|CSM)$/);
   if (m){
     if (pendingEdit && pendingEdit.sub.role === m[1]){ const pe = pendingEdit; pendingEdit = null; return renderAssessment(m[1], pe.sub, pe.qid); }
     return renderAssessment(m[1]);
@@ -480,9 +529,9 @@ function renderHome(){
     <section class="hero">
       <div>
         <h1>Where do you want to develop?</h1>
-        <p>This is a quick, honest self-assessment of the skills that drive pipeline, conversion, and customer experience at ${esc(CONFIG.ORG_NAME)}. Rate yourself 1 to 5 on each step of your sales process and add a sentence on why.</p>
-        <p>Your answers are private. Only sales leadership and enablement see them, and we use them to build training that fits what the team actually needs rather than what we guess it needs.</p>
-        <p>Be candid. A low score is not a mark against you, it is a request for support. A high score tells us who can help coach the team.</p>
+        <p>This is an honest self-assessment of the skills that drive pipeline, conversion, sales and customer experience at ${esc(CONFIG.ORG_NAME)}. Rate yourself 1 to 5 on each step of your sales process and add a sentence on why.</p>
+        <p>Your answers are private. Only sales leadership and enablement see them, and we use them to build training that fits around you and the team.</p>
+        <p>Be candid. A low score is not a mark against you, it is a request for support. A high score tells us who can help coach others within the team.</p>
       </div>
       <aside class="scale-card">
         <h3>The rating scale</h3>
@@ -508,13 +557,14 @@ function renderAssessment(roleKey, existing, focusQ){
   const role = ROLES[roleKey];
   document.documentElement.style.setProperty("--accent", role.accent);
   const qs = allQuestions(roleKey);
-  state = { role: roleKey, scores:{}, reasons:{}, priorities:["","",""], comments:"", name:"", email:"", manager:"", id:null, editing:false };
+  state = { role: roleKey, scores:{}, reasons:{}, learning:{}, learnReasons:{}, priorities:["","",""], comments:"", name:"", email:"", manager:"", id:null, editing:false };
   if (existing){
     state.id = existing.id; state.editing = true; state.focusQ = focusQ || null;
     state.name = existing.name || ""; state.email = existing.email || ""; state.manager = existing.manager || "";
     state.comments = existing.comments || "";
     const pr = (existing.priorities || []).slice(0,3); state.priorities = [pr[0]||"", pr[1]||"", pr[2]||""];
     (existing.questions || []).forEach(q => { if (q.score) state.scores[q.id] = q.score; if (q.reason) state.reasons[q.id] = q.reason; });
+    (existing.learning || []).forEach(l => { if (l.score) state.learning[l.id] = l.score; if (l.reason) state.learnReasons[l.id] = l.reason; });
   }
 
   let idx = 0;
@@ -549,6 +599,20 @@ function renderAssessment(roleKey, existing, focusQ){
       <div class="stage-mini" id="m-stages">${role.stages.map(st => `<span data-stage="${esc(st.name)}"><i></i>${esc(st.name)} <b>–</b></span>`).join("")}</div>
     </section>
     ${stagesHtml}
+    <section class="extras learn">
+      <h2>How do you like to learn?</h2>
+      <p>Rate how well each of these works for you, and tell us why. This shapes how we deliver the training, not just what we cover.</p>
+      ${LEARNING.map(l => `
+      <div class="q learn-q" id="lq-${l.id}">
+        <p class="qt"><span>${esc(l.label)}</span></p>
+        <p class="why" style="margin-top:-6px">${esc(l.hint)}</p>
+        <div class="rating" role="radiogroup" aria-label="${esc(l.label)}">
+          ${LEARN_SCALE.map(s => `<button type="button" role="radio" aria-checked="false" data-lq="${l.id}" data-v="${s.v}" onclick="setLearn('${l.id}',${s.v})"><span class="v">${s.v}</span><span class="t">${esc(s.short)}</span></button>`).join("")}
+        </div>
+        <p class="why">Why? <span style="font-weight:400">(what has worked or not worked for you in this format)</span></p>
+        <textarea data-learn="${l.id}" placeholder="e.g. Roleplay is uncomfortable but it is where cold call openers finally clicked for me." oninput="state.learnReasons['${l.id}']=this.value"></textarea>
+      </div>`).join("")}
+    </section>
     <section class="extras">
       <h2>Your top 3 coaching priorities</h2>
       <p>Which three areas would make the biggest difference to your results if we invested in them this quarter?</p>
@@ -569,8 +633,10 @@ function renderAssessment(roleKey, existing, focusQ){
     const mgrSel = $("#f-mgr"); if (state.manager && ![...mgrSel.options].some(o => o.value === state.manager)){ const o = document.createElement("option"); o.value = o.textContent = state.manager; mgrSel.appendChild(o); } mgrSel.value = state.manager;
     Object.entries(state.scores).forEach(([qid, v]) => setScore(qid, v));
     Object.entries(state.reasons).forEach(([qid, r]) => { const t = document.querySelector(`textarea[data-reason="${qid}"]`); if (t) t.value = r; });
+    Object.entries(state.learning).forEach(([id, v]) => setLearn(id, v));
+    Object.entries(state.learnReasons).forEach(([id, r]) => { const t = document.querySelector(`textarea[data-learn="${id}"]`); if (t) t.value = r; });
     document.querySelectorAll(".prio select").forEach((sel, i) => { sel.value = state.priorities[i] || ""; });
-    const c = document.querySelector(".extras textarea:not([data-reason])"); if (c) c.value = state.comments;
+    const c = document.querySelector(".extras textarea:not([data-reason]):not([data-learn])"); if (c) c.value = state.comments;
     if (state.focusQ){ const el = document.getElementById("q-" + state.focusQ); if (el) setTimeout(() => el.scrollIntoView({ behavior:"smooth", block:"center" }), 60); }
   }
   updateMeter();
@@ -582,6 +648,12 @@ function editSubmission(sub, qid){
   const target = "#/assess/" + sub.role;
   if (location.hash === target){ renderAssessment(sub.role, sub, qid); }
   else { pendingEdit = { sub, qid }; location.hash = target; }
+}
+
+function setLearn(id, v){
+  state.learning[id] = v;
+  document.querySelectorAll(`button[data-lq="${id}"]`).forEach(b => { const on = +b.dataset.v === v; b.classList.toggle("sel", on); b.setAttribute("aria-checked", on); });
+  const el = document.getElementById("lq-" + id); if (el) el.classList.add("done");
 }
 
 function setScore(qid, v){
@@ -617,7 +689,8 @@ async function submitAssessment(){
   const missing = qs.filter(q => !state.scores[q.id]);
   if (missing.length){ err.textContent = `${missing.length} question${missing.length>1?"s":""} still unrated.`; document.getElementById("q-" + missing[0].id).scrollIntoView({ behavior:"smooth", block:"center" }); return; }
   const questions = qs.map(q => ({ id:q.id, stage:q.stage, text:q.text, score: state.scores[q.id], reason: (state.reasons[q.id] || "").trim() }));
-  const sub = buildSubmission({ name: state.name.trim(), email: state.email.trim(), manager: state.manager.trim(), role: state.role, questions, priorities: state.priorities.filter(Boolean), comments: state.comments.trim() });
+  const learning = LEARNING.map(l => ({ id:l.id, label:l.label, score: state.learning[l.id] || null, reason: (state.learnReasons[l.id] || "").trim() }));
+  const sub = buildSubmission({ name: state.name.trim(), email: state.email.trim(), manager: state.manager.trim(), role: state.role, questions, priorities: state.priorities.filter(Boolean), comments: state.comments.trim(), learning });
   if (state.id) sub.id = state.id;
   const wasEditing = state.editing;
   const btn = $("#submitBtn"); btn.disabled = true; btn.textContent = wasEditing ? "Saving…" : "Submitting…";
@@ -656,6 +729,7 @@ function renderConfirmation(sub, updated){
         <div>
           <div class="card" style="margin-bottom:14px"><h3>Where you want support</h3><ul class="list">${low.map(q => `<li><b>${q.score}</b> · ${esc(q.text)}</li>`).join("")}</ul></div>
           <div class="card"><h3>Your strengths</h3><ul class="list">${high.map(q => `<li><b>${q.score}</b> · ${esc(q.text)}</li>`).join("")}</ul></div>
+          ${(sub.learning||[]).some(l => l.score) ? `<div class="card" style="margin-top:14px"><h3>How you like to learn</h3><ul class="list">${[...sub.learning].filter(l => l.score).sort((a,b) => b.score - a.score).map(l => `<li><b>${l.score}</b> · ${esc(l.label)}</li>`).join("")}</ul></div>` : ""}
         </div>
       </div>
       <div class="box" style="margin-top:18px"><h2>Your answers</h2><p class="sub">Changed your mind on something? Click Edit next to any question to change that score or note.</p>
@@ -789,7 +863,7 @@ function renderAdminDashboard(){
       <button class="btn ghost sm" onclick="adminLogout()">Sign out</button>
     </div>
     <div class="filters">
-      <div class="seg">${["ALL","SDR","AE","SE"].map(k => `<button class="${adminView.role===k?'on':''}" onclick="adminView.role='${k}';renderAdminDashboard()">${k==="ALL"?"All roles":k}</button>`).join("")}</div>
+      <div class="seg">${["ALL","SDR","AE","SE","CSM"].map(k => `<button class="${adminView.role===k?'on':''}" onclick="adminView.role='${k}';renderAdminDashboard()">${k==="ALL"?"All roles":k}</button>`).join("")}</div>
       <select onchange="adminView.manager=this.value;renderAdminDashboard()"><option value="">All managers</option>${managers.map(m => `<option ${adminView.manager===m?'selected':''}>${esc(m)}</option>`).join("")}</select>
       <div class="seg"><button class="${adminView.latestOnly?'on':''}" onclick="adminView.latestOnly=true;renderAdminDashboard()">Latest per rep</button><button class="${!adminView.latestOnly?'on':''}" onclick="adminView.latestOnly=false;renderAdminDashboard()">All submissions</button></div>
     </div>
@@ -813,12 +887,25 @@ function renderAdminDashboard(){
       </div>
     </div>
     ${roleKeys.map(rk => renderHeatmap(rk, subs.filter(s => s.role === rk))).join("")}
+    ${renderLearning(subs)}
     <div class="box">
       <h2>Individual reps</h2><p class="sub">Click a rep to see every score and comment.</p>
       <div class="reps">${subs.map(s => `<div class="rep" onclick="adminView.rep='${esc(s.id)}';renderAdminDashboard()"><div class="n">${esc(s.name)}</div><div class="m">${s.role} · ${esc(s.manager||"no manager listed")} · ${fmtDate(s.timestamp)}</div><div class="s" style="color:${band(s.overall).color}">${fmt(s.overall)}</div>
         <div class="rep-actions" onclick="event.stopPropagation()"><button class="btn ghost sm" onclick="editSubmission(adminData.find(x=>x.id==='${esc(s.id)}'))">Edit scores</button><button class="btn ghost sm danger-btn" onclick="adminDelete('${esc(s.id)}')">Delete</button></div></div>`).join("")}</div>
     </div>`}`;
   bindTips();
+}
+
+function renderLearning(subs){
+  const rows = LEARNING.map(l => {
+    const items = subs.flatMap(s => (s.learning||[]).filter(x => x.id === l.id && x.score));
+    return { l, avg: avg(items.map(x => x.score)), n: items.length, best: items.filter(x => x.score >= 4).length, reasons: items.filter(x => x.reason).slice(0,4) };
+  }).filter(r => r.n).sort((a,b) => b.avg - a.avg);
+  if (!rows.length) return "";
+  return `<div class="box" style="margin-bottom:18px">
+    <h2>How the team likes to learn</h2><p class="sub">Average preference per format, 1 to 5. Hover a bar for what reps said. Use this to decide delivery format, not just content.</p>
+    ${rows.map(r => `<div class="hbar" data-tip="${esc(r.reasons.map(x => `${x.reason}`).join("\n") || "No comments yet")}"><span>${esc(r.l.label)} <span style="color:var(--ink3);font-size:12.5px">(${r.best} of ${r.n} rate it 4+)</span></span><div class="bg"><i style="width:${(r.avg-1)/4*100}%;background:var(--terra)"></i></div><span class="val">${fmt(r.avg)}</span></div>`).join("")}
+  </div>`;
 }
 
 function renderHeatmap(roleKey, subs){
@@ -859,7 +946,8 @@ function renderRepDetail(id){
     <div class="grid2">
       <div class="box"><h2>By stage</h2><p class="sub">Lowest first.</p>${Object.entries(s.stageAverages).sort((a,b)=>a[1]-b[1]).map(([n,v]) => `<div class="hbar"><span>${esc(n)}</span><div class="bg"><i style="width:${(v-1)/4*100}%;background:${heatColor(v)}"></i></div><span class="val">${fmt(v)}</span></div>`).join("")}</div>
       <div class="box"><h2>Top 3 coaching priorities</h2><p class="sub">Chosen by the rep.</p>${prioText.length ? `<ol class="list">${prioText.map(t => `<li>${esc(t)}</li>`).join("")}</ol>` : `<p class="sub">None selected.</p>`}
-        ${s.comments ? `<h2 style="margin-top:14px;font-size:16px">Anything else</h2><p style="margin:0;color:var(--ink2)">${esc(s.comments)}</p>` : ""}</div>
+        ${s.comments ? `<h2 style="margin-top:14px;font-size:16px">Anything else</h2><p style="margin:0;color:var(--ink2)">${esc(s.comments)}</p>` : ""}
+        ${(s.learning||[]).some(l => l.score) ? `<h2 style="margin-top:14px;font-size:16px">How ${esc(s.name.split(" ")[0])} likes to learn</h2>${[...s.learning].filter(l => l.score).sort((a,b) => b.score - a.score).map(l => `<div class="hbar"><span>${esc(l.label)}</span><div class="bg"><i style="width:${(l.score-1)/4*100}%;background:var(--terra)"></i></div><span class="val">${l.score}</span></div>${l.reason ? `<p style="margin:0 0 8px;font-size:13.5px;color:var(--ink2)">${esc(l.reason)}</p>` : ""}`).join("")}` : ""}</div>
     </div>
     <div class="box"><h2>All responses</h2><p class="sub">Sorted lowest to highest so coaching conversations start in the right place.</p>
       <table class="detail"><thead><tr><th>Score</th><th>Stage</th><th>Skill</th><th>Why this score</th></tr></thead>
@@ -869,7 +957,7 @@ function renderRepDetail(id){
 
 function exportCSV(){
   const rows = [["Timestamp","Name","Email","Role","Manager","Overall","Stage","QuestionId","Question","Score","Reason","Priorities","Comments"]];
-  filteredSubs().forEach(s => s.questions.forEach(q => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),q.stage,q.id,q.text,q.score,q.reason,(s.priorities||[]).join(" | "),s.comments])));
+  filteredSubs().forEach(s => { s.questions.forEach(q => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),q.stage,q.id,q.text,q.score,q.reason,(s.priorities||[]).join(" | "),s.comments])); (s.learning||[]).forEach(l => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),"How I like to learn",l.id,l.label,l.score ?? "",l.reason,"",""])); });
   const csv = rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" })); a.download = `meevo-tna-${new Date().toISOString().slice(0,10)}.csv`; a.click();
 }
