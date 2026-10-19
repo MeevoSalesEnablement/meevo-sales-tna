@@ -396,6 +396,21 @@ const LEARNING = [
 const LEARN_SCALE = [
   { v:1, short:"Not for me" }, { v:2, short:"Rarely" }, { v:3, short:"Sometimes" }, { v:4, short:"Works well" }, { v:5, short:"Best for me" }
 ];
+
+/* =========================================================
+   LIVING THE MEEVO VALUES  (asked of every role, scored separately from sales skills)
+   ========================================================= */
+const VALUES = [
+  { id:"val-innovation",  name:"Innovation",  text:"I stay curious about what is possible for my clients and my own role, try new approaches, and experiment rather than waiting to be told.", hint:"We boldly reimagine what is possible through curiosity, creativity, technology, and rapid experimentation." },
+  { id:"val-disruption",  name:"Disruption",  text:"I challenge the status quo with purpose, questioning how we work and how we serve clients when there is a better way.", hint:"We challenge the status quo with purpose to create lasting advantage." },
+  { id:"val-empowerment", name:"Empowerment", text:"I take ownership of my results, make decisions without waiting for permission, take thoughtful risks, and learn quickly from what does not work.", hint:"We create the space for people to succeed by trusting them to think, take thoughtful risks, and learn from every experience." },
+  { id:"val-inspire",     name:"Inspire",     text:"I lead through my actions, model the behaviours we expect of each other, and show what is possible every day.", hint:"We inspire by leading through our actions and demonstrating what is possible." },
+  { id:"val-creativity",  name:"Creativity",  text:"I combine imagination with Meevo's technology to solve client problems in ways that create real value, not just a feature list.", hint:"We unleash creativity by combining human imagination with technology." },
+  { id:"val-integrity",   name:"Integrity",   text:"I am honest and transparent with clients and colleagues, follow through on commitments, and do what is right even when it costs me a deal.", hint:"We act with integrity by being honest, transparent, and accountable." }
+];
+const VALUE_SCALE = [
+  { v:1, short:"Rarely" }, { v:2, short:"Sometimes" }, { v:3, short:"Usually" }, { v:4, short:"Consistently" }, { v:5, short:"I set the example" }
+];
 </script>
 
 <script>
@@ -462,7 +477,8 @@ function seedDemo(){
       qs.push({ id:q.id, stage:st.name, text:q.text, score:s, reason: rnd() > .45 ? reasons[Math.floor(rnd()*reasons.length)] : "" });
     }));
     const learning = LEARNING.map((l, li) => ({ id:l.id, label:l.label, score: Math.max(1, Math.min(5, Math.round(2 + rnd()*3 + (li===(i%4)?1:0)))), reason: rnd() > .5 ? "This is how most of what I know actually stuck." : "" }));
-    const sub = buildSubmission({ name, email: name.toLowerCase().replace(" ",".") + "@meevo.com", manager: mgr, role, questions: qs, priorities: weak[role].slice(0,3), comments:"", learning });
+    const values = VALUES.map((v, vi) => ({ id:v.id, name:v.name, score: Math.max(1, Math.min(5, Math.round(base + 0.4 + (rnd() - .5) * 2 - (vi===1||vi===0 ? 0.6 : 0)))), reason: rnd() > .55 ? "I do this with clients, less so internally." : "" }));
+    const sub = buildSubmission({ name, email: name.toLowerCase().replace(" ",".") + "@meevo.com", manager: mgr, role, questions: qs, priorities: weak[role].slice(0,3), comments:"", learning, values });
     sub.id = cryptoId(); sub.timestamp = new Date(Date.now() - (i*2+1) * 86400000).toISOString();
     out.push(sub);
   });
@@ -487,10 +503,10 @@ const HEAT = ["#E4ECEF","#B8CDD5","#7FA6B4","#45788B","#204855"];
 function heatColor(v){ if (v == null) return "transparent"; const i = Math.max(0, Math.min(4, Math.round(v) - 1)); return HEAT[i]; }
 function heatInk(v){ return (v != null && v >= 3.5) ? "#fff" : "#232426"; }
 
-function buildSubmission({ name, email, manager, role, questions, priorities, comments, learning }){
+function buildSubmission({ name, email, manager, role, questions, priorities, comments, learning, values }){
   const stageAverages = {};
   ROLES[role].stages.forEach(st => { stageAverages[st.name] = avg(questions.filter(q => q.stage === st.name).map(q => q.score)); });
-  return { name, email, manager, role, questions, priorities, comments, learning: learning || [], overall: avg(questions.map(q => q.score)), stageAverages };
+  return { name, email, manager, role, questions, priorities, comments, learning: learning || [], values: values || [], valuesOverall: avg((values || []).map(v => v.score)), overall: avg(questions.map(q => q.score)), stageAverages };
 }
 
 /* =========================================================
@@ -541,7 +557,7 @@ function renderHome(){
     <h2 style="margin:0 0 12px;font-size:20px">Choose your role</h2>
     <section class="panels">${panels}</section>
     <section class="how">
-      <div><h4>1. Rate each step</h4><p>Work through your sales process stage by stage. The meter at the top updates as you go.</p></div>
+      <div><h4>1. Rate each step</h4><p>Work through your sales process stage by stage, then the six Meevo values. The meter at the top updates as you go.</p></div>
       <div><h4>2. Tell us why</h4><p>A short note under each score helps us understand what support would actually help.</p></div>
       <div><h4>3. Pick your top 3</h4><p>Flag the three areas you most want coaching on, then submit. Enablement builds the plan from there.</p></div>
     </section>
@@ -557,7 +573,7 @@ function renderAssessment(roleKey, existing, focusQ){
   const role = ROLES[roleKey];
   document.documentElement.style.setProperty("--accent", role.accent);
   const qs = allQuestions(roleKey);
-  state = { role: roleKey, scores:{}, reasons:{}, learning:{}, learnReasons:{}, priorities:["","",""], comments:"", name:"", email:"", manager:"", id:null, editing:false };
+  state = { role: roleKey, scores:{}, reasons:{}, learning:{}, learnReasons:{}, values:{}, valueReasons:{}, priorities:["","",""], comments:"", name:"", email:"", manager:"", id:null, editing:false };
   if (existing){
     state.id = existing.id; state.editing = true; state.focusQ = focusQ || null;
     state.name = existing.name || ""; state.email = existing.email || ""; state.manager = existing.manager || "";
@@ -565,6 +581,7 @@ function renderAssessment(roleKey, existing, focusQ){
     const pr = (existing.priorities || []).slice(0,3); state.priorities = [pr[0]||"", pr[1]||"", pr[2]||""];
     (existing.questions || []).forEach(q => { if (q.score) state.scores[q.id] = q.score; if (q.reason) state.reasons[q.id] = q.reason; });
     (existing.learning || []).forEach(l => { if (l.score) state.learning[l.id] = l.score; if (l.reason) state.learnReasons[l.id] = l.reason; });
+    (existing.values || []).forEach(v => { if (v.score) state.values[v.id] = v.score; if (v.reason) state.valueReasons[v.id] = v.reason; });
   }
 
   let idx = 0;
@@ -596,9 +613,23 @@ function renderAssessment(roleKey, existing, focusQ){
         <div class="ticks"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
         <div class="band" id="m-band" style="color:#6B6B6B">Start rating to see where you land</div></div>
       <div class="progress"><b id="m-prog">0 / ${qs.length}</b>answered</div>
-      <div class="stage-mini" id="m-stages">${role.stages.map(st => `<span data-stage="${esc(st.name)}"><i></i>${esc(st.name)} <b>–</b></span>`).join("")}</div>
+      <div class="stage-mini" id="m-stages">${role.stages.map(st => `<span data-stage="${esc(st.name)}"><i></i>${esc(st.name)} <b>–</b></span>`).join("")}<span id="m-values" style="margin-left:auto;border-color:var(--terra-light);background:var(--terra-light);color:#5F3A1F"><i style="background:var(--terra)"></i>Meevo values <b>–</b></span></div>
     </section>
     ${stagesHtml}
+    <section class="extras values-sec" style="border-top:4px solid var(--terra)">
+      <h2>Living the Meevo values</h2>
+      <p>Skills get you in the room. The values are how you show up in it. Rate how consistently you live each one in your day to day work, and add a line on why. This is scored separately from your sales skills.</p>
+      ${VALUES.map((v, vi) => `
+      <div class="q value-q" id="vq-${v.id}">
+        <p class="qt"><span class="idx" style="color:var(--terra)">${vi+1}.</span><span><span style="color:var(--terra)">${esc(v.name)}.</span> ${esc(v.text)}</span></p>
+        <p class="why" style="margin-top:-6px;font-weight:400;font-style:italic">${esc(v.hint)}</p>
+        <div class="rating" role="radiogroup" aria-label="${esc(v.name)}">
+          ${VALUE_SCALE.map(s => `<button type="button" role="radio" aria-checked="false" data-vq="${v.id}" data-v="${s.v}" onclick="setValue('${v.id}',${s.v})"><span class="v">${s.v}</span><span class="t">${esc(s.short)}</span></button>`).join("")}
+        </div>
+        <p class="why">Why this score? <span style="font-weight:400">(an example of when you lived this, or where it slips)</span></p>
+        <textarea data-value="${v.id}" placeholder="e.g. I'm transparent on pricing from the first call, but I avoid telling a prospect when we're not the right fit." oninput="state.valueReasons['${v.id}']=this.value"></textarea>
+      </div>`).join("")}
+    </section>
     <section class="extras learn">
       <h2>How do you like to learn?</h2>
       <p>Rate how well each of these works for you, and tell us why. This shapes how we deliver the training, not just what we cover.</p>
@@ -635,8 +666,10 @@ function renderAssessment(roleKey, existing, focusQ){
     Object.entries(state.reasons).forEach(([qid, r]) => { const t = document.querySelector(`textarea[data-reason="${qid}"]`); if (t) t.value = r; });
     Object.entries(state.learning).forEach(([id, v]) => setLearn(id, v));
     Object.entries(state.learnReasons).forEach(([id, r]) => { const t = document.querySelector(`textarea[data-learn="${id}"]`); if (t) t.value = r; });
+    Object.entries(state.values).forEach(([id, v]) => setValue(id, v));
+    Object.entries(state.valueReasons).forEach(([id, r]) => { const t = document.querySelector(`textarea[data-value="${id}"]`); if (t) t.value = r; });
     document.querySelectorAll(".prio select").forEach((sel, i) => { sel.value = state.priorities[i] || ""; });
-    const c = document.querySelector(".extras textarea:not([data-reason]):not([data-learn])"); if (c) c.value = state.comments;
+    const c = document.querySelector(".extras textarea:not([data-reason]):not([data-learn]):not([data-value])"); if (c) c.value = state.comments;
     if (state.focusQ){ const el = document.getElementById("q-" + state.focusQ); if (el) setTimeout(() => el.scrollIntoView({ behavior:"smooth", block:"center" }), 60); }
   }
   updateMeter();
@@ -648,6 +681,13 @@ function editSubmission(sub, qid){
   const target = "#/assess/" + sub.role;
   if (location.hash === target){ renderAssessment(sub.role, sub, qid); }
   else { pendingEdit = { sub, qid }; location.hash = target; }
+}
+
+function setValue(id, v){
+  state.values[id] = v;
+  document.querySelectorAll(`button[data-vq="${id}"]`).forEach(b => { const on = +b.dataset.v === v; b.classList.toggle("sel", on); b.setAttribute("aria-checked", on); });
+  const el = document.getElementById("vq-" + id); if (el) el.classList.add("done");
+  const chip = document.getElementById("m-values"); if (chip){ const a = avg(Object.values(state.values)); chip.querySelector("b").textContent = a == null ? "–" : fmt(a); }
 }
 
 function setLearn(id, v){
@@ -688,9 +728,12 @@ async function submitAssessment(){
   if (!state.name.trim() || !state.email.trim()) { err.textContent = "Please add your name and work email."; $("#f-name").focus(); return; }
   const missing = qs.filter(q => !state.scores[q.id]);
   if (missing.length){ err.textContent = `${missing.length} question${missing.length>1?"s":""} still unrated.`; document.getElementById("q-" + missing[0].id).scrollIntoView({ behavior:"smooth", block:"center" }); return; }
+  const missingV = VALUES.filter(v => !state.values[v.id]);
+  if (missingV.length){ err.textContent = `${missingV.length} Meevo value${missingV.length>1?"s":""} still unrated.`; document.getElementById("vq-" + missingV[0].id).scrollIntoView({ behavior:"smooth", block:"center" }); return; }
   const questions = qs.map(q => ({ id:q.id, stage:q.stage, text:q.text, score: state.scores[q.id], reason: (state.reasons[q.id] || "").trim() }));
   const learning = LEARNING.map(l => ({ id:l.id, label:l.label, score: state.learning[l.id] || null, reason: (state.learnReasons[l.id] || "").trim() }));
-  const sub = buildSubmission({ name: state.name.trim(), email: state.email.trim(), manager: state.manager.trim(), role: state.role, questions, priorities: state.priorities.filter(Boolean), comments: state.comments.trim(), learning });
+  const values = VALUES.map(v => ({ id:v.id, name:v.name, score: state.values[v.id] || null, reason: (state.valueReasons[v.id] || "").trim() }));
+  const sub = buildSubmission({ name: state.name.trim(), email: state.email.trim(), manager: state.manager.trim(), role: state.role, questions, priorities: state.priorities.filter(Boolean), comments: state.comments.trim(), learning, values });
   if (state.id) sub.id = state.id;
   const wasEditing = state.editing;
   const btn = $("#submitBtn"); btn.disabled = true; btn.textContent = wasEditing ? "Saving…" : "Submitting…";
@@ -729,6 +772,7 @@ function renderConfirmation(sub, updated){
         <div>
           <div class="card" style="margin-bottom:14px"><h3>Where you want support</h3><ul class="list">${low.map(q => `<li><b>${q.score}</b> · ${esc(q.text)}</li>`).join("")}</ul></div>
           <div class="card"><h3>Your strengths</h3><ul class="list">${high.map(q => `<li><b>${q.score}</b> · ${esc(q.text)}</li>`).join("")}</ul></div>
+          ${(sub.values||[]).some(v => v.score) ? `<div class="card" style="margin-top:14px"><h3>Living the Meevo values · ${fmt(sub.valuesOverall)} / 5</h3>${[...sub.values].filter(v => v.score).sort((a,b) => a.score - b.score).map(v => `<div class="hbar"><span>${esc(v.name)}</span><div class="bg"><i style="width:${(v.score-1)/4*100}%;background:var(--terra)"></i></div><span class="val">${v.score}</span></div>`).join("")}</div>` : ""}
           ${(sub.learning||[]).some(l => l.score) ? `<div class="card" style="margin-top:14px"><h3>How you like to learn</h3><ul class="list">${[...sub.learning].filter(l => l.score).sort((a,b) => b.score - a.score).map(l => `<li><b>${l.score}</b> · ${esc(l.label)}</li>`).join("")}</ul></div>` : ""}
         </div>
       </div>
@@ -887,6 +931,7 @@ function renderAdminDashboard(){
       </div>
     </div>
     ${roleKeys.map(rk => renderHeatmap(rk, subs.filter(s => s.role === rk))).join("")}
+    ${renderValues(subs)}
     ${renderLearning(subs)}
     <div class="box">
       <h2>Individual reps</h2><p class="sub">Click a rep to see every score and comment.</p>
@@ -894,6 +939,21 @@ function renderAdminDashboard(){
         <div class="rep-actions" onclick="event.stopPropagation()"><button class="btn ghost sm" onclick="editSubmission(adminData.find(x=>x.id==='${esc(s.id)}'))">Edit scores</button><button class="btn ghost sm danger-btn" onclick="adminDelete('${esc(s.id)}')">Delete</button></div></div>`).join("")}</div>
     </div>`}`;
   bindTips();
+}
+
+function renderValues(subs){
+  const rows = VALUES.map(v => {
+    const items = subs.flatMap(s => (s.values||[]).filter(x => x.id === v.id && x.score));
+    return { v, avg: avg(items.map(x => x.score)), n: items.length, low: items.filter(x => x.score <= 2).length, reasons: items.filter(x => x.reason).slice(0,4).map(x => { const who = subs.find(s => (s.values||[]).includes(x)); return `${who ? who.name : ""} (${x.score}): ${x.reason}`; }) };
+  }).filter(r => r.n).sort((a,b) => a.avg - b.avg);
+  if (!rows.length) return "";
+  const overall = avg(subs.map(s => s.valuesOverall).filter(x => x != null));
+  const byRole = Object.keys(ROLES).map(k => { const a = avg(subs.filter(s => s.role === k).map(s => s.valuesOverall).filter(x => x != null)); return a == null ? null : `${k} ${fmt(a)}`; }).filter(Boolean).join(" · ");
+  return `<div class="box" style="margin-bottom:18px;border-top:4px solid var(--terra)">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap"><h2>Living the Meevo values</h2><span class="pill" style="background:var(--terra-light);color:#5F3A1F">Team ${fmt(overall)} / 5</span><span style="font-size:13px;color:var(--ink3)">${byRole}</span></div>
+    <p class="sub">How consistently reps say they live each value. Lowest first. Hover a bar for examples in their own words. Scored separately from sales skills.</p>
+    ${rows.map(r => `<div class="hbar" data-tip="${esc(r.reasons.join("\n") || "No comments yet")}"><span>${esc(r.v.name)} <span style="color:var(--ink3);font-size:12.5px">(${r.low} of ${r.n} at 2 or below)</span></span><div class="bg"><i style="width:${(r.avg-1)/4*100}%;background:var(--terra)"></i></div><span class="val">${fmt(r.avg)}</span></div>`).join("")}
+  </div>`;
 }
 
 function renderLearning(subs){
@@ -947,6 +1007,7 @@ function renderRepDetail(id){
       <div class="box"><h2>By stage</h2><p class="sub">Lowest first.</p>${Object.entries(s.stageAverages).sort((a,b)=>a[1]-b[1]).map(([n,v]) => `<div class="hbar"><span>${esc(n)}</span><div class="bg"><i style="width:${(v-1)/4*100}%;background:${heatColor(v)}"></i></div><span class="val">${fmt(v)}</span></div>`).join("")}</div>
       <div class="box"><h2>Top 3 coaching priorities</h2><p class="sub">Chosen by the rep.</p>${prioText.length ? `<ol class="list">${prioText.map(t => `<li>${esc(t)}</li>`).join("")}</ol>` : `<p class="sub">None selected.</p>`}
         ${s.comments ? `<h2 style="margin-top:14px;font-size:16px">Anything else</h2><p style="margin:0;color:var(--ink2)">${esc(s.comments)}</p>` : ""}
+        ${(s.values||[]).some(v => v.score) ? `<h2 style="margin-top:14px;font-size:16px">Living the Meevo values · ${fmt(s.valuesOverall)} / 5</h2>${[...s.values].filter(v => v.score).sort((a,b) => a.score - b.score).map(v => `<div class="hbar"><span>${esc(v.name)}</span><div class="bg"><i style="width:${(v.score-1)/4*100}%;background:var(--terra)"></i></div><span class="val">${v.score}</span></div>${v.reason ? `<p style="margin:0 0 8px;font-size:13.5px;color:var(--ink2)">${esc(v.reason)}</p>` : ""}`).join("")}` : ""}
         ${(s.learning||[]).some(l => l.score) ? `<h2 style="margin-top:14px;font-size:16px">How ${esc(s.name.split(" ")[0])} likes to learn</h2>${[...s.learning].filter(l => l.score).sort((a,b) => b.score - a.score).map(l => `<div class="hbar"><span>${esc(l.label)}</span><div class="bg"><i style="width:${(l.score-1)/4*100}%;background:var(--terra)"></i></div><span class="val">${l.score}</span></div>${l.reason ? `<p style="margin:0 0 8px;font-size:13.5px;color:var(--ink2)">${esc(l.reason)}</p>` : ""}`).join("")}` : ""}</div>
     </div>
     <div class="box"><h2>All responses</h2><p class="sub">Sorted lowest to highest so coaching conversations start in the right place.</p>
@@ -957,7 +1018,7 @@ function renderRepDetail(id){
 
 function exportCSV(){
   const rows = [["Timestamp","Name","Email","Role","Manager","Overall","Stage","QuestionId","Question","Score","Reason","Priorities","Comments"]];
-  filteredSubs().forEach(s => { s.questions.forEach(q => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),q.stage,q.id,q.text,q.score,q.reason,(s.priorities||[]).join(" | "),s.comments])); (s.learning||[]).forEach(l => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),"How I like to learn",l.id,l.label,l.score ?? "",l.reason,"",""])); });
+  filteredSubs().forEach(s => { s.questions.forEach(q => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),q.stage,q.id,q.text,q.score,q.reason,(s.priorities||[]).join(" | "),s.comments])); (s.learning||[]).forEach(l => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),"How I like to learn",l.id,l.label,l.score ?? "",l.reason,"",""])); (s.values||[]).forEach(v => rows.push([s.timestamp,s.name,s.email,s.role,s.manager,fmt(s.overall),"Meevo values",v.id,v.name,v.score ?? "",v.reason,"",""])); });
   const csv = rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g,'""')}"`).join(",")).join("\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type:"text/csv" })); a.download = `meevo-tna-${new Date().toISOString().slice(0,10)}.csv`; a.click();
 }
