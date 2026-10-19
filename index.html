@@ -401,13 +401,15 @@ const LEARN_SCALE = [
    LIVING THE MEEVO VALUES  (asked of every role, scored separately from sales skills)
    ========================================================= */
 const VALUES = [
-  { id:"val-innovation",  name:"Innovation",  text:"I stay curious about what is possible for my clients and my own role, try new approaches, and experiment rather than waiting to be told.", hint:"We boldly reimagine what is possible through curiosity, creativity, technology, and rapid experimentation." },
-  { id:"val-disruption",  name:"Disruption",  text:"I challenge the status quo with purpose, questioning how we work and how we serve clients when there is a better way.", hint:"We challenge the status quo with purpose to create lasting advantage." },
+  { id:"val-innovation",  name:"Innovation",  text:"I stay curious about what is possible for my clients and my own role, try new approaches, and experiment rather than waiting to be told.", sales:"I stay curious about what is possible for my prospects and my own role, try new approaches, and experiment rather than waiting to be told.", hint:"We boldly reimagine what is possible through curiosity, creativity, technology, and rapid experimentation." },
+  { id:"val-disruption",  name:"Disruption",  text:"I challenge the status quo with purpose, questioning how we work and how we serve clients when there is a better way.", sales:"I challenge the status quo with purpose, questioning how we work and how we serve prospects when there is a better way.", hint:"We challenge the status quo with purpose to create lasting advantage." },
   { id:"val-empowerment", name:"Empowerment", text:"I take ownership of my results, make decisions without waiting for permission, take thoughtful risks, and learn quickly from what does not work.", hint:"We create the space for people to succeed by trusting them to think, take thoughtful risks, and learn from every experience." },
   { id:"val-inspire",     name:"Inspire",     text:"I lead through my actions, model the behaviours we expect of each other, and show what is possible every day.", hint:"We inspire by leading through our actions and demonstrating what is possible." },
-  { id:"val-creativity",  name:"Creativity",  text:"I combine imagination with Meevo's technology to solve client problems in ways that create real value, not just a feature list.", hint:"We unleash creativity by combining human imagination with technology." },
-  { id:"val-integrity",   name:"Integrity",   text:"I am honest and transparent with clients and colleagues, follow through on commitments, and do what is right even when it costs me a deal.", hint:"We act with integrity by being honest, transparent, and accountable." }
+  { id:"val-creativity",  name:"Creativity",  text:"I combine imagination with Meevo's technology to solve client problems in ways that create real value, not just a feature list.", sales:"I combine imagination with Meevo's technology to solve prospects' problems in ways that create real value, not just a feature list.", hint:"We unleash creativity by combining human imagination with technology." },
+  { id:"val-integrity",   name:"Integrity",   text:"I am honest and transparent with clients and colleagues, follow through on commitments, and do what is right even when it costs me a deal.", sales:"I am honest and transparent with prospects and colleagues, follow through on commitments, and do what is right even when it costs me a deal.", hint:"We act with integrity by being honest, transparent, and accountable." }
 ];
+/* SDR and AE see the prospect wording; SE and CSM see the client wording. */
+const valueText = (v, role) => ((role === "SDR" || role === "AE") && v.sales) ? v.sales : v.text;
 const VALUE_SCALE = [
   { v:1, short:"Rarely" }, { v:2, short:"Sometimes" }, { v:3, short:"Usually" }, { v:4, short:"Consistently" }, { v:5, short:"I set the example" }
 ];
@@ -621,7 +623,7 @@ function renderAssessment(roleKey, existing, focusQ){
       <p>Skills get you in the room. The values are how you show up in it. Rate how consistently you live each one in your day to day work, and add a line on why. This is scored separately from your sales skills.</p>
       ${VALUES.map((v, vi) => `
       <div class="q value-q" id="vq-${v.id}">
-        <p class="qt"><span class="idx" style="color:var(--terra)">${vi+1}.</span><span><span style="color:var(--terra)">${esc(v.name)}.</span> ${esc(v.text)}</span></p>
+        <p class="qt"><span class="idx" style="color:var(--terra)">${vi+1}.</span><span><span style="color:var(--terra)">${esc(v.name)}.</span> ${esc(valueText(v, roleKey))}</span></p>
         <p class="why" style="margin-top:-6px;font-weight:400;font-style:italic">${esc(v.hint)}</p>
         <div class="rating" role="radiogroup" aria-label="${esc(v.name)}">
           ${VALUE_SCALE.map(s => `<button type="button" role="radio" aria-checked="false" data-vq="${v.id}" data-v="${s.v}" onclick="setValue('${v.id}',${s.v})"><span class="v">${s.v}</span><span class="t">${esc(s.short)}</span></button>`).join("")}
