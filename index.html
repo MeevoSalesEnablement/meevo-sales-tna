@@ -217,7 +217,7 @@ const CONFIG = {
   DEMO_ADMIN_PASSWORD: "meevo",
   ORG_NAME: "Meevo",
   // Managers by role (shown in the rep form) plus Sales Enablement, who are offered to every role.
-  MANAGERS_BY_ROLE: { SDR: ["Avery Baccala"], AE: ["Melanie Hull", "Taylor Meeker"], SE: [], CSM: [] },
+  MANAGERS_BY_ROLE: { SDR: ["Avery Baccala"], AE: ["Melanie Hull", "Taylor Meeker"], SE: [], CAE: [] },
   ENABLEMENT: ["Terry Moorehead", "Nicole Fabre"],
   get MANAGERS(){ return [...new Set([...Object.values(this.MANAGERS_BY_ROLE).flat(), ...this.ENABLEMENT])]; }
 };
@@ -349,36 +349,36 @@ const ROLES = {
     ]
   },
 
-  CSM: {
-    key:"CSM", name:"Customer Success Manager", abbr:"CSM", accent:"#5F6B4A",
+  CAE: {
+    key:"CAE", name:"Customer Account Executive", abbr:"CAE", accent:"#5F6B4A",
     tagline:"Onboarding, adoption, business reviews, retention, and expansion.",
     stages:[
       { name:"Onboarding & Handoff", why:"The first 90 days decide whether a client becomes a long term customer.", questions:[
-        { id:"csm-1", text:"Run a structured kickoff after the sales handoff that captures the client's goals, pain points, and what success looks like to them." },
-        { id:"csm-2", text:"Drive the early adoption milestones (online booking live, payments live, staff trained) on a clear timeline." }
+        { id:"cae-1", text:"Run a structured kickoff after the sales handoff that captures the client's goals, pain points, and what success looks like to them." },
+        { id:"cae-2", text:"Drive the early adoption milestones (online booking live, payments live, staff trained) on a clear timeline." }
       ]},
       { name:"Adoption & Value", why:"Clients stay when they feel the value, not when they own the features.", questions:[
-        { id:"csm-3", text:"Identify under used features (memberships, online booking, marketing automation, reporting) and connect them to the client's own goals." },
-        { id:"csm-4", text:"Train owners, managers, and front desk staff in a way that sticks, not just a one time walkthrough." },
-        { id:"csm-5", text:"Use Meevo reporting to show the client the value they are getting in revenue, retention, or time saved." }
+        { id:"cae-3", text:"Identify under used features (memberships, online booking, marketing automation, reporting) and connect them to the client's own goals." },
+        { id:"cae-4", text:"Train owners, managers, and front desk staff in a way that sticks, not just a one time walkthrough." },
+        { id:"cae-5", text:"Use Meevo reporting to show the client the value they are getting in revenue, retention, or time saved." }
       ]},
       { name:"Relationships & Business Reviews", why:"Owner level conversations about their business, not feature updates.", questions:[
-        { id:"csm-6", text:"Run check ins and business reviews that focus on the client's business goals rather than a product update." },
-        { id:"csm-7", text:"Build relationships beyond the primary contact so the account is not dependent on one person." }
+        { id:"cae-6", text:"Run check ins and business reviews that focus on the client's business goals rather than a product update." },
+        { id:"cae-7", text:"Build relationships beyond the primary contact so the account is not dependent on one person." }
       ]},
       { name:"Health & Risk", why:"Churn is usually visible months before the renewal date.", questions:[
-        { id:"csm-8", text:"Spot early churn signals (low logins, support ticket spikes, payment issues, ownership change) and act before renewal." },
-        { id:"csm-9", text:"Have a direct conversation with an unhappy client and turn it around." },
-        { id:"csm-10", text:"Manage escalations and set expectations with support and product without over promising." }
+        { id:"cae-8", text:"Spot early churn signals (low logins, support ticket spikes, payment issues, ownership change) and act before renewal." },
+        { id:"cae-9", text:"Have a direct conversation with an unhappy client and turn it around." },
+        { id:"cae-10", text:"Manage escalations and set expectations with support and product without over promising." }
       ]},
       { name:"Renewal & Expansion", why:"Retention protects revenue, expansion grows it.", questions:[
-        { id:"csm-11", text:"Lead renewal conversations with confidence and hold price by returning to value." },
-        { id:"csm-12", text:"Spot and position expansion (payments, add on modules, additional locations) as a natural next step rather than a pitch." },
-        { id:"csm-13", text:"Handle 'we are looking at a competitor' from an existing client." }
+        { id:"cae-11", text:"Lead renewal conversations with confidence and hold price by returning to value." },
+        { id:"cae-12", text:"Spot and position expansion (payments, add on modules, additional locations) as a natural next step rather than a pitch." },
+        { id:"cae-13", text:"Handle 'we are looking at a competitor' from an existing client." }
       ]},
       { name:"Product & Process", why:"Confident advice depends on current knowledge and clean records.", questions:[
-        { id:"csm-14", text:"Keep my product knowledge and release awareness current so I can advise clients confidently." },
-        { id:"csm-15", text:"Keep account health notes, next steps, and renewal dates accurate and current." }
+        { id:"cae-14", text:"Keep my product knowledge and release awareness current so I can advise clients confidently." },
+        { id:"cae-15", text:"Keep account health notes, next steps, and renewal dates accurate and current." }
       ]}
     ]
   }
@@ -408,7 +408,7 @@ const VALUES = [
   { id:"val-creativity",  name:"Creativity",  text:"I combine imagination with Meevo's technology to solve client problems in ways that create real value, not just a feature list.", sales:"I combine imagination with Meevo's technology to solve prospects' problems in ways that create real value, not just a feature list.", hint:"We unleash creativity by combining human imagination with technology." },
   { id:"val-integrity",   name:"Integrity",   text:"I am honest and transparent with clients and colleagues, follow through on commitments, and do what is right even when it costs me a deal.", sales:"I am honest and transparent with prospects and colleagues, follow through on commitments, and do what is right even when it costs me a deal.", hint:"We act with integrity by being honest, transparent, and accountable." }
 ];
-/* SDR and AE see the prospect wording; SE and CSM see the client wording. */
+/* SDR and AE see the prospect wording; SE and CAE see the client wording. */
 const valueText = (v, role) => ((role === "SDR" || role === "AE") && v.sales) ? v.sales : v.text;
 const VALUE_SCALE = [
   { v:1, short:"Rarely" }, { v:2, short:"Sometimes" }, { v:3, short:"Usually" }, { v:4, short:"Consistently" }, { v:5, short:"I set the example" }
@@ -465,9 +465,9 @@ function seedDemo(){
     ["Jordan Blake","SDR","Sam Rivera",2.6],["Priya Nair","SDR","Sam Rivera",3.4],["Marcus Lee","SDR","Sam Rivera",3.9],
     ["Alexis Chen","AE","Taylor Morgan",3.1],["Devon Carter","AE","Taylor Morgan",3.8],["Riley Brooks","AE","Taylor Morgan",2.8],
     ["Casey Nguyen","SE","Taylor Morgan",3.6],["Morgan Ellis","SE","Taylor Morgan",4.1],
-    ["Jamie Ortiz","CSM","Robin Park",3.3],["Sydney Patel","CSM","Robin Park",2.9]
+    ["Jamie Ortiz","CAE","Robin Park",3.3],["Sydney Patel","CAE","Robin Park",2.9]
   ];
-  const weak = { SDR:["sdr-6","sdr-14","sdr-15","sdr-16","sdr-7"], AE:["ae-5","ae-14","ae-18","ae-19","ae-21","ae-22"], SE:["se-1","se-9","se-15","se-8"], CSM:["csm-8","csm-11","csm-13","csm-5"] };
+  const weak = { SDR:["sdr-6","sdr-14","sdr-15","sdr-16","sdr-7"], AE:["ae-5","ae-14","ae-18","ae-19","ae-21","ae-22"], SE:["se-1","se-9","se-15","se-8"], CAE:["cae-8","cae-11","cae-13","cae-5"] };
   const reasons = ["Still get thrown when they push back.","Comfortable in prep but it slips on live calls.","Do this well with warm leads, less so with cold.","Have had wins here recently.","Need more reps on this, especially with med spas.","Could run a session on this for the team.","Tend to react instead of lead here."];
   let seed = 7; const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
   const out = [];
@@ -521,7 +521,7 @@ function route(){
   window.scrollTo(0,0);
   if (h === "#/admin") return renderAdmin();
   if (h === "#/mine") return renderMine();
-  const m = h.match(/^#\/assess\/(SDR|AE|SE|CSM)$/);
+  const m = h.match(/^#\/assess\/(SDR|AE|SE|CAE)$/);
   if (m){
     if (pendingEdit && pendingEdit.sub.role === m[1]){ const pe = pendingEdit; pendingEdit = null; return renderAssessment(m[1], pe.sub, pe.qid); }
     return renderAssessment(m[1]);
@@ -909,7 +909,7 @@ function renderAdminDashboard(){
       <button class="btn ghost sm" onclick="adminLogout()">Sign out</button>
     </div>
     <div class="filters">
-      <div class="seg">${["ALL","SDR","AE","SE","CSM"].map(k => `<button class="${adminView.role===k?'on':''}" onclick="adminView.role='${k}';renderAdminDashboard()">${k==="ALL"?"All roles":k}</button>`).join("")}</div>
+      <div class="seg">${["ALL","SDR","AE","SE","CAE"].map(k => `<button class="${adminView.role===k?'on':''}" onclick="adminView.role='${k}';renderAdminDashboard()">${k==="ALL"?"All roles":k}</button>`).join("")}</div>
       <select onchange="adminView.manager=this.value;renderAdminDashboard()"><option value="">All managers</option>${managers.map(m => `<option ${adminView.manager===m?'selected':''}>${esc(m)}</option>`).join("")}</select>
       <div class="seg"><button class="${adminView.latestOnly?'on':''}" onclick="adminView.latestOnly=true;renderAdminDashboard()">Latest per rep</button><button class="${!adminView.latestOnly?'on':''}" onclick="adminView.latestOnly=false;renderAdminDashboard()">All submissions</button></div>
     </div>
